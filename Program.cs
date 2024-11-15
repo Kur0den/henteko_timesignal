@@ -23,13 +23,10 @@ class TimeSignal {
         using (HttpClient client = new HttpClient()) {
             try {
                 // POSTリクエストの送信
-                string content = $"------{time}時------";
+                string content = $"──────{time}時──────";  // 送信する内容
                 var bodyContent = new StringContent(@$"{{""i"":""{config["token"]}"", ""text"": ""{content}""}}", Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync($"https://{config["instance"]}", bodyContent);
+                HttpResponseMessage response = await client.PostAsync($"https://{config["instance"]}/api/notes/create", bodyContent);
                 response.EnsureSuccessStatusCode();
-                string responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("POST Response:");
-                Console.WriteLine(responseBody);
             } catch (HttpRequestException e) {
                 Console.WriteLine($"Request error: {e.Message}");
             }
@@ -70,10 +67,10 @@ class TimeSignal {
         } while (true); // infinite loop
 
     Random rand = new Random();
-    int randomElement = remainingTime.OrderBy(x => rand.Next()).First();
-    Console.WriteLine($"Random element: {randomElement}");
+    int randomTime = remainingTime.OrderBy(x => rand.Next()).First();
+    Console.WriteLine($"Random element: {randomTime}");
 
-
+    PostRequest(randomTime).Wait();
 
 
     Console.WriteLine($"Remaining time: {string.Join(", ", remainingTime)}");
