@@ -1,23 +1,20 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using System.Net.Http;
-using System.Threading.Tasks;
+
 
 class TimeSignal {
-    static readonly string timePath = "./time.json";
-    static readonly string configPath = "./config.json";
+    static readonly string timePath = "./time.json";  // 時刻ファイルのパス
+    static readonly string configPath = "./config.json";  // 設定ファイルのパス
 
-    static Dictionary<string, string>? config = new Dictionary<string, string>();
+    static Dictionary<string, string>? config = new Dictionary<string, string>();  // 設定ファイルの内容を格納する変数
 
 
     // 新しい時刻ファイルを作成する関数
     static void CreateNewContent() {
         Console.WriteLine("Creating new file");
-        int[] newContent = Enumerable.Range(0, 24).ToArray();
-        string jsonContent = JsonSerializer.Serialize(newContent);
-        File.WriteAllText(timePath, jsonContent);
+        int[] newContent = Enumerable.Range(0, 24).ToArray();  // LINQを使用して0から23までの配列を作成
+        string jsonContent = JsonSerializer.Serialize(newContent);  // 配列をシリアライズ
+        File.WriteAllText(timePath, jsonContent);  // ファイルに書き込み
     }
 
     // POSTリクエストを送信するための関数
@@ -28,13 +25,14 @@ class TimeSignal {
                 string content = $"$[tada.speed=0s ──────{GetTimeEmoji(time)}{time}時{GetTimeEmoji(time)}──────]";  // 送信する内容
                 var bodyContent = new StringContent(@$"{{""i"":""{config["token"]}"", ""text"": ""{content}""}}", Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await client.PostAsync($"https://{config["instance"]}/api/notes/create", bodyContent);
-                response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();  // エラーがある場合は例外を投げる
             } catch (HttpRequestException e) {
                 Console.WriteLine($"Request error: {e.Message}");
             }
         }
     }
 
+    // 時刻に対応する絵文字を取得する関数
     static string GetTimeEmoji(int Time) {
         return Time switch {
             0 => "🕛",
