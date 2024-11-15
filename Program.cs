@@ -1,16 +1,85 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 class TimeSignal {
-    static void Main() {
-        string path = "time.json";
+    static readonly string timePath = "./time.json";
+    static readonly string configPath = "./config.json";
 
-        try {
-            string content = File.ReadAllText(path);
-            Console.WriteLine(content);
-        } catch (FileNotFoundException) {
-            int[] newContent = Enumerable.Range(0, 24).ToArray();
+    static Dictionary<string, string>? config = new Dictionary<string, string>();
+
+    static void CreateNewContent() {
+        Console.WriteLine("Creating new file");
+        int[] newContent = Enumerable.Range(0, 23).ToArray();
+        string jsonContent = JsonSerializer.Serialize(newContent);
+        File.WriteAllText(timePath, jsonContent);
+    }
+
+    // POSTリクエストを送信するための関数
+    static async Task PostRequest(int time) {
+        using (HttpClient client = new HttpClient()) {
+            try {
+                // POSTリクエストの送信
+                string content = $"------{time}時------";
+                var bodyContent = new StringContent(@$"{{""i"":""{config["token"]}"", ""text"": ""{content}""}}", Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync($"https://{config["instance"]}", bodyContent);
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("POST Response:");
+                Console.WriteLine(responseBody);
+            } catch (HttpRequestException e) {
+                Console.WriteLine($"Request error: {e.Message}");
+            }
         }
+    }
+    static void Main() {
+
+        int[]? remainingTime;
+
+
+        // 設定ファイルから設定を取得
+        try {
+            string content = File.ReadAllText(configPath);
+            config = JsonSerializer.Deserialize<Dictionary<string, string>>(content);
+            if (config is null) {
+                throw new Exception("config is null");
+            }
+        } catch (FileNotFoundException) {
+                throw new Exception("File not found");
+        }
+
+
+
+        // その日にまだ使用していない時刻をファイルから取得
+        do {
+            try {
+
+                string content = File.ReadAllText(timePath);
+                remainingTime = JsonSerializer.Deserialize<int[]>(content);
+                if (remainingTime != null) {
+                    break;
+                }
+                Console.WriteLine("remainingTime is null");
+            } catch (FileNotFoundException) {
+                Console.WriteLine("File not found");
+            }
+            CreateNewContent();
+        } while (true); // infinite loop
+
+    Random rand = new Random();
+    int randomElement = remainingTime.OrderBy(x => rand.Next()).First();
+    Console.WriteLine($"Random element: {randomElement}");
+
+
+
+
+    Console.WriteLine($"Remaining time: {string.Join(", ", remainingTime)}");
+
+
+
+
     }
 }
