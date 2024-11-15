@@ -25,7 +25,7 @@ class TimeSignal {
         using (HttpClient client = new HttpClient()) {
             try {
                 // POSTリクエストの送信
-                string content = $"$[tada.speed=0s $[tada.speed=0s ──────{GetTimeEmoji(time)}{time}時{GetTimeEmoji(time)}──────]]";  // 送信する内容
+                string content = $"$[tada.speed=0s ──────{GetTimeEmoji(time)}{time}時{GetTimeEmoji(time)}──────]";  // 送信する内容
                 var bodyContent = new StringContent(@$"{{""i"":""{config["token"]}"", ""text"": ""{content}""}}", Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await client.PostAsync($"https://{config["instance"]}/api/notes/create", bodyContent);
                 response.EnsureSuccessStatusCode();
